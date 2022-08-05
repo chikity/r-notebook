@@ -17,6 +17,9 @@
 # Output files from R CMD check
 /*.Rcheck/
 
+# Output from Rmd Knits
+/*.html
+
 # RStudio files
 .Rproj.user/
 
@@ -37,3 +40,5 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+

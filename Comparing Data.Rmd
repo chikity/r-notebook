@@ -1,0 +1,45 @@
+---
+title: "Comparing Data"
+output: html_document
+---
+
+## Operators
+
+---
+
+### Custom 'NOT IN' Operator
+
+R has a built in `%in%` operator that's useful for comparing values that's similar to SQL's `LIKE` operator.  However, it doesn't have a built in `NOT LIKE` operator like SQL does which is useful in some cases.
+
+```{r}
+# Defining the operator
+
+`%!in%` <- Negate(`%in%`)
+```
+
+Example:
+
+```{r}
+fav_fruits <- c('apple', 'oranges', 'bananas', 'grape')
+shopping_list <- c('bananas', 'persimmon', 'peach', 'apple', 'custard apple')
+
+# Normal `%in%` operator use
+fav_fruits[fav_fruits %in% shopping_list]
+```
+Above we can see two of our favorite fruits being on the shopping list
+
+Next, using the custom defined `%!in%` operator
+```{r}
+# Favorite fruits not being bought
+
+fav_fruits[fav_fruits %!in% shopping_list]
+```
+```{r}
+# Not so favorite fruits being bought :(
+
+shopping_list[shopping_list %!in% fav_fruits]
+```
+
+---
+
+### 
