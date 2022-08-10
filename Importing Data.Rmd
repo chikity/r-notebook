@@ -1,0 +1,48 @@
+---
+title: "Importing Data"
+author: "Chi Kit Yeung"
+date: "2022-08-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+## Importing Multiple CSVs from a Directory
+
+A lot of times I find myself with data sources that are stored in multiple separate csv files, this method seems to be the best one I've found so far to import them all into a single dataframe.
+
+```{r eval=FALSE}
+# Importing the data
+# First define the path where the data is stored
+path <- "../data/"
+filenames <- list.files(path = path)
+
+## Below is to import a specific range of files in the directory
+# files <- list.files(path = path)
+# filenames <- files[c((length(files)-7):length(files))]
+
+
+## Into a list
+all_df <- lapply(filenames, function(i) {
+  i <- paste(path,i,sep="")
+  read.csv(i, header=FALSE)
+  })
+filenames <- gsub("-","_",filenames)
+names(all_df) <- gsub(".csv","",filenames)
+
+## Joining all the data frames
+joined_df <- all_df %>% 
+  reduce(full_join)
+
+## Reduce function above appends a new placeholder column name and pushes the actual name to first row
+names(joined_df) <- joined_df[1,]
+df <- joined_df %>% 
+  slice(-1)
+```
+
+The disadvantage of this method is that all data types will be converted to `char` so an additional step will be needed to convert your data into the right types.
+
+

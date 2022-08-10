@@ -1,8 +1,9 @@
 ---
 title: "Comparing Data"
+author: "Chi Kit Yeung"
+date: "2022-08-05"
 output: html_document
 ---
-
 ## Operators
 
 ---
@@ -42,4 +43,51 @@ shopping_list[shopping_list %!in% fav_fruits]
 
 ---
 
-### 
+### Intersect and SetDiff
+
+```{r}
+intersect(fav_fruits, shopping_list)
+```
+
+
+```{r}
+setdiff(fav_fruits, shopping_list)
+```
+
+
+## Uncategorized
+
+### Regex
+
+Regular expressions can be utilized using the str_detect() function.
+
+```{r}
+library(tidyverse)
+
+str_detect(fav_fruits, "a..le")
+```
+```{r} 
+# Matching
+fav_fruits[str_detect(fav_fruits, "a..le")]
+```
+
+```{r}
+# Not matching
+fav_fruits[!str_detect(fav_fruits, "a..le")]
+```
+
+### Unique
+
+Getting unique values from a list using the `unique()` function.
+
+```{r}
+# A lot of dupes here, I just want the unique values!
+locales <- c("ar_SA", "ar_SA", "de_DE", "de_DE", "de_DE", "en_AU", "es_ES", "es_ES", "es_ES", "es_ES", "es_MX", "es_MX", "es_MX", "es_MX", "es_US", "es_US", "es_US", "es_US", "es_US", "es_US", "fr_FR", "he_IL", "he_IL", "it_IT", "it_IT", "it_IT", "nb_NO", "nb_NO", "ru_RU", "ru_RU", "ru_RU", "sv_SE", "sv_SE", "sv_SE", "tr_TR", "tr_TR", "tr_TR")
+
+locales
+```
+
+```{r}
+unique(locales)
+```
+
