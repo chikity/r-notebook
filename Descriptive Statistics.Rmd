@@ -1,0 +1,52 @@
+---
+title: "Descriptive Statistics"
+author: "Chi Kit Yeung"
+# date: "2022-08-15"
+output: 
+  html_document:
+    toc: true
+    theme: united
+---
+
+Applying descriptive statistics in R
+```{r include=FALSE}
+library(tidyverse)
+```
+
+
+# Fundamentals
+```{r}
+data("PlantGrowth")
+
+data <- PlantGrowth
+head(data)
+```
+```{r}
+str(data)
+```
+
+```{r}
+by(data, data$group, summary)
+```
+
+## Central Tendency
+```{r}
+library(pastecs)
+
+stat.desc(data)
+```
+
+
+### Mean, Median, Mode
+
+
+### Skewness
+
+### Variance
+
+### Standard Deviation
+
+### Covariance
+
+### Correlation Coefficient
+
