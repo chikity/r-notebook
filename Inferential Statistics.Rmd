@@ -1,0 +1,142 @@
+---
+title: "Descriptive Statistics"
+author: "Chi Kit Yeung"
+# date: "2022-08-15"
+output: 
+  html_document:
+    toc: true
+    theme: united
+---
+
+## Distributions
+
+### Normal Distribution
+
+### Standard Normal Distribution
+
+Standardization can be applied to any distribution.  A standardized normal distribution will have a mean of 0 and a standard deviation of 1.
+
+#### Data Set
+```{r setup, include=FALSE}
+options(scipen=999)
+library(tidyverse)
+```
+
+```{r}
+original_dataset <- c(567.45, 572.45, 572.45, 589.12, 613.87, 615.78, 628.45, 644.87, 650.45, 652.20, 656.87, 661.45, 666.45, 667.70, 668.95, 675.28, 675.78, 685.53, 694.28, 697.62, 705.78, 705.87, 708.12, 711.03, 714.03, 716.03, 722.28, 728.12, 728.70, 729.03, 730.12, 731.95, 735.03, 736.95, 737.37, 738.28, 739.78, 740.62, 743.62, 747.20, 748.20, 748.28, 748.53, 750.03, 752.12, 754.70, 755.03, 758.37, 760.53, 764.03, 769.28, 775.45, 781.20, 781.70, 785.62, 792.78, 793.37, 795.28, 797.62, 798.95, 799.70, 799.95, 810.87, 811.53, 813.62, 814.03, 814.78, 817.87, 818.87, 820.70, 821.12, 825.62, 828.62, 841.45, 842.03, 842.87, 849.62, 874.70, 878.78, 897.45)
+
+ggplot(mapping = aes(original_dataset)) +
+  geom_histogram(bins = 20)
+```
+
+
+#### Calculate the mean and standard deviation of the dataset
+```{r}
+mean <- mean(original_dataset)
+standard_deviation <- sd(original_dataset)
+
+mean
+standard_deviation
+```
+
+
+
+#### Standardize the dataset
+The formula
+$$z=\frac{x-\mu}{\sigma}$$
+```{r}
+standardized_dataset <- (original_dataset-mean)/standard_deviation
+
+standardized_dataset
+```
+Now that we have the new standardized dataset let's try plotting it
+
+```{r}
+new_mean <- mean(standardized_dataset)
+new_standard_deviation <- sd(standardized_dataset)
+
+round(new_mean)
+round(new_standard_deviation)
+```
+
+
+#### Plot the data on a graph to see the change
+
+```{r}
+ggplot(mapping = aes(standardized_dataset)) +
+  geom_histogram(bins = 20)
+```
+
+
+### Central Limit Theorem
+
+### Standard Error
+
+---
+
+## Estimates
+
+### Confidence Interval
+
+$$CI = \overline{x} \pm z_{\alpha/2} \frac{\sigma}{\sqrt{n}}$$
+
+#### Dataset
+
+Given:
+
+```{r}
+dataScientist_salaries <- c(117313, 104002, 113038, 101936, 84560, 113136, 80740, 100536, 105052, 87201, 91986, 94868, 90745, 102848, 85927, 112276, 108637, 96818, 92307, 114564, 109714, 108833, 115295, 89279, 81720, 89344, 114426, 90410, 95118, 113382)
+
+std_dev <- 15000
+```
+Population Standard deviation = $15,000
+
+#### Calculate the mean
+```{r}
+salary_mean <- mean(dataScientist_salaries)
+salary_mean
+```
+
+#### Find the appropriate z-score for calculating a 90% confidence interval
+
+R has a couple of handy functions to find the z distribution values.  First is the `pnorm()` which receives the z-value and spits back out the $\alpha$/2 value.
+
+```{r}
+# 95% Confidence Interval, z0.025
+pnorm(1.96)
+```
+
+
+```{r}
+# 99% Confidence Interval, z 0.005
+qnorm(0.995)
+```
+
+Knowing this, to get the z-value for a 90% confidence interval estimate.  The alpha is 1-0.9, or 0.1.  Divide that by 2 to get $\alpha$/2 and we'll need to get the z-value for 1-0.05, __0.95__.
+```{r}
+z <- qnorm(0.95)
+z
+```
+
+I find this whole thing unnecessarily complex.  Let's make a small function to get the results by simply inputting the desired confidence interval
+
+```{r}
+confidence <- 90
+
+z <- round(qnorm(1-(1-(confidence/100))/2), 2)
+```
+
+
+```{r}
+lower_int <- round(salary_mean - z*(std_dev/sqrt(30)))
+
+upper_int <- round(salary_mean + z*(std_dev/sqrt(30)))
+```
+
+Now we can say with 90% confidence that the average salary for data scientists fall between `r lower_int` and `r upper_int`.
+
+
+
+### Student's T Distribution
+
+Developed by a research for Guiness beer
