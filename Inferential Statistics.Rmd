@@ -1,5 +1,5 @@
 ---
-title: "Descriptive Statistics"
+title: "Inferential Statistics"
 author: "Chi Kit Yeung"
 # date: "2022-08-15"
 output: 
@@ -20,6 +20,7 @@ Standardization can be applied to any distribution.  A standardized normal distr
 ```{r setup, include=FALSE}
 options(scipen=999)
 library(tidyverse)
+library(knitr)
 ```
 
 ```{r}
@@ -74,9 +75,11 @@ ggplot(mapping = aes(standardized_dataset)) +
 
 ---
 
-## Estimates
+# Confidence Interval
 
-### Confidence Interval
+## Single Population
+
+### z-Statistic
 
 $$CI = \overline{x} \pm z_{\alpha/2} \frac{\sigma}{\sqrt{n}}$$
 
@@ -140,3 +143,222 @@ Now we can say with 90% confidence that the average salary for data scientists f
 ### Student's T Distribution
 
 Developed by a research for Guiness beer
+
+#### Dataset
+```{r}
+t_dataset <- c(78000, 90000, 75000, 117000, 105000, 96000, 89500, 102300, 80000)
+```
+
+#### Calculate the mean and the standard error of the dataset
+```{r}
+t_mean <- mean(t_dataset)
+t_sd <- sd(t_dataset)
+```
+
+#### Determine which statistic to use for inference
+If population standard deviation is not known, we should use the t-statistic.  If it is known, then we will use the z-statistic.
+
+#### Find the appropriate statistic, taking into consideration the degrees of freedom (if applicable) for 99% confidence
+
+The degrees of freedom is equal to the sample size minus one
+
+```{r}
+# Find df with R
+t_df <- length(t_dataset)-1
+t_df
+```
+
+Like the z-value, R also has a handy function that can help find the t-statistic.  `pt()` and `qt()`
+```{r}
+# Getting the t-statistic
+# 99% confidence interval
+t_value <- round(qt(1-0.01/2, t_df), 2)
+t_value
+```
+
+
+
+#### Find the 99% confidence interval
+
+Formula: 
+$$CI = \overline{x} \pm t_{n-1, \alpha/2} \frac{s}{\sqrt{n}}$$
+
+```{r}
+lower_int <- round(t_mean - t_value*(t_sd/sqrt(length(t_dataset))))
+
+upper_int <- round(t_mean + t_value*(t_sd/sqrt(length(t_dataset))))
+```
+
+Using the t-statistic, we can say with 99% confidence that the average salary for data scientists fall between `r lower_int` and `r upper_int`.
+
+---
+
+## Two Variables
+
+### Dependent Variables
+
+#### Background
+_The 365 team has developed a diet and an exercise program for losing weight. It seems that it works like a charm. However, you are interested in how much weight are you likely to lose._
+
+We're provided with the following dataset:
+```{r}
+subject <- c(1:10)
+weight_before <- c(228.58, 244.01, 262.46, 224.32, 202.14, 246.98, 195.86, 231.88, 243.32, 266.74)
+weight_after <- c(204.74, 223.95, 232.94, 212.04, 191.74, 233.47, 177.60, 213.85, 218.85, 236.86)
+
+weight_loss_df <- data.frame(subject, weight_before, weight_after)
+kable(weight_loss_df)
+```
+
+Adding a new column to find the difference:
+```{r}
+df <- weight_loss_df %>% 
+  mutate("difference" = weight_after-weight_before)
+
+kable(df)
+```
+Now that we've calculated the 'difference', we can treat this as a single population.
+
+We'll be using the t-statistics because of the small (<30) sample size and unknown population variance.
+```{r}
+# Calculating the mean and standard deviation
+mean <- mean(df$difference)
+sd <- sd(df$difference)
+
+# Finding the t-statistic for a 95% confidence interval
+t_value <- qt(1-0.05/2, length(df)-1)
+
+# Calculating the confidence interval
+lower_limit <- mean-t_value*(sd/sqrt(10))
+upper_limit <- mean+t_value*(sd/sqrt(10))
+```
+
+__Results:__
+
+- Mean = `r mean`
+- Standard deviation = `r sd`
+- $t_{9,\ 0.025}$ = t_value
+
+$T_{95\%}$ Confidence interval: `r lower_limit` and `r upper_limit`
+
+__Inferences__
+
+1. In 95% of subjects, the true mean will fall within the above interval.
+2. The whole interval is negative.
+3. All subjects successfully lost weight.
+
+"I am 95% confident that by following the diet and exercise program you will lose between `r round(-upper_limit)` to `r round(-lower_limit)` lbs."
+
+__Extra__
+
+Let's try calculating the 90% and 99% confidence interval to see the differences.
+
+```{r}
+# Creating a helper function to avoid redundant typing
+find_lower_CI <- function(c) {
+  round(mean-(qt(1-(1-(c/100))/2, length(df)-1))*(sd/sqrt(10)), 2)
+}
+
+find_upper_CI <- function(c) {
+  round(mean+(qt(1-(1-(c/100))/2, length(df)-1))*(sd/sqrt(10)), 2)
+}
+
+# Putting the CIs in a dataframe
+CI <- c("Lower Int", "Upper Int")
+T90 <- c(find_lower_CI(90), find_upper_CI(90))
+T95 <- c(find_lower_CI(95), find_upper_CI(95))
+T99 <- c(find_lower_CI(99), find_upper_CI(99))
+
+kable(data.frame(CI, T90, T95, T99))
+```
+
+We can clearly see that the higher the confidence the wider the interval range.  There is a trade off between higher confidence.  On one hand the inference we make will very likely be correct but the range would be so wide that it is useless for any meaninful statistic.
+
+### Independent Variables
+
+#### Variance of differences
+
+##### z-statistic
+
+$$ \sigma^2_x, \sigma^2_y = \frac{\sigma^2_x}{n_x} + \frac{\sigma^2_y}{n_y} $$
+
+##### t-statistic
+
+$$ s^2_p = \frac{(n_x-1)s^2_x+(n_y-1)s^2_y}{n_x+n_y-2} $$
+
+#### CI Formulas
+
+##### z-statistic
+
+$$ CI = (\overline{x}-\overline{y}) \pm z_{\alpha/2} \sqrt{\frac{\sigma^2_x}{n_x} + \frac{\sigma^2_y}{n_y}}$$
+
+##### t-statistic
+
+$$ CI = (\overline{x}-\overline{y}) \pm t_{n_x+n_y-2,\alpha/2} \sqrt{\frac{s^2_p}{n_x} + \frac{s^2_p}{n_y}}$$
+
+
+#### Excercise 1
+
+Confidence interval for difference of two means; independent samples, variances unknown but assumed to be equal
+```{r}
+# Dataset
+ny_apple <- c(3.80, 3.76, 3.87, 3.99, 4.02, 4.25, 4.13, 3.98, 3.99, 3.62)
+la_apple <- c(3.02, 3.22, 3.24, 3.02, 3.06, 3.15, 3.81, 3.44) 
+```
+
+Since the population variance is unknown and the sample size is small, we will be using the t-statistic again for this particular excercise.
+
+##### Calculation
+```{r}
+# Find mean, standard deviation, variance
+ny_mean <- mean(ny_apple)
+ny_sd <- sd(ny_apple)
+ny_var <- var(ny_apple)
+la_mean <- mean(la_apple)
+la_sd <- sd(la_apple)
+la_var <- var(la_apple)
+ny_len <- length(ny_apple)
+la_len <- length(la_apple)
+
+# Pooled Variance
+s2p <- ((ny_var*(ny_len-1))+(la_var*(la_len-1)))/(ny_len+la_len-2)
+
+
+# Find t-values
+t_90 <- round(qt(1-(1-(90/100))/2, ny_len+la_len-2), 2)
+t_95 <- round(qt(1-(1-(95/100))/2, ny_len+la_len-2), 2)
+
+# Calculate CI
+lower_int <- round((ny_mean-la_mean)-t_90*sqrt((s2p/ny_len)+(s2p/la_len)), 2)
+upper_int <- round((ny_mean-la_mean)+t_90*sqrt((s2p/ny_len)+(s2p/la_len)), 2)
+```
+
+CI = (`r lower_int`, `r upper_int`)
+
+#### Excercise 2
+
+Confidence interval for the difference of two means. Independent samples, variance known
+```{r}
+# Dataset
+index <- c("Sample Size", "Sample Mean", "Population Std")
+engineering <- c(100, 58, 10)
+management <- c(70, 65, 5)
+difference <- c(NA, -7, 1.16)
+
+data <- data.frame(index, engineering, management, difference)
+data
+```
+
+We've pretty much been handed all the information needed on a silver platter here.  Since we know the population standard deviation, we will be using the z-statistic.
+
+##### Calculation
+```{r}
+# Find z-value
+z_value <- round(qnorm(1-(1-(99/100))/2), 2)
+
+# Calculate CI
+lower_int <- round(data$difference[2]-z_value*sqrt((data$engineering[3]^2/data$engineering[1])+(data$management[3]^2/data$management[1])), 2)
+upper_int <- round(data$difference[2]+z_value*sqrt((data$engineering[3]^2/data$engineering[1])+(data$management[3]^2/data$management[1])), 2)
+```
+
+CI = (`r lower_int`, `r upper_int`)
