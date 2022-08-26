@@ -1,0 +1,55 @@
+---
+title: "Programming with R"
+author: "Chi Kit Yeung"
+date: "2022-08-26"
+output: 
+  html_document:
+    toc: true
+    theme: united
+---
+# Custom Function
+To source a set of functions in R:
+
+Create a new `R Script` (.R file) in the same working directory as your .Rmd file or R script. Give the file a descriptive name that captures the types of functions in the file.
+Open that R Script file and add one or more functions to the file.
+Save your file.
+Next,
+
+Open your `.Rmd` file or `R` script.
+At the top of your file, add the `source(path/tofile/here.R)` function.
+
+`source("remote-sensing-functions.R")`
+
+If the .R script is in your main working directory, then it won’t have a path element before it like `week_06/functionfile.R` vs `functionfile.R`.
+
+If it’s in a different directory, adjust the path accordingly. Once you run the code containing the source() function, all of the functions in your .R file will load into your global environment. You can now use them in your script!
+
+# Running R from terminal
+If you want the output to print to the terminal it is best to use Rscript
+
+`Rscript a.R`
+
+Note that when using `R CMD BATCH a.R` that instead of redirecting output to standard out and displaying on the terminal a new file called a.Rout will be created.
+
+```
+R CMD BATCH a.R
+# Check the output
+cat a.Rout
+```
+
+One other thing to note about using Rscript is that it doesn't load the methods package by default which can cause confusion. So if you're relying on anything that methods provides you'll want to load it explicitly in your script.
+
+If you really want to use the ./a.R way of calling the script you could add an appropriate #! to the top of the script
+
+```
+#!/usr/bin/env Rscript
+sayHello <- function(){
+   print('hello')
+}
+
+sayHello()
+```
+
+I will also note that if you're running on a *unix system there is the useful littler package which provides easy command line piping to R. It may be necessary to use littler to run shiny apps via a script? Further details can be found in this question.
+
+
