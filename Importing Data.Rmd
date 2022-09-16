@@ -45,4 +45,188 @@ df <- joined_df %>%
 
 The disadvantage of this method is that all data types will be converted to `char` so an additional step will be needed to convert your data into the right types.
 
+# Importing Data from REST API
+
+Recently at work I've found the need to access data via REST API servers.  Our organization has some readily available client python wrappers available but none for R so I had to create my own to access the data.  It was a great learning experience.
+
+To tackle this I've decided to create a helper R script to store the API functions that my RMD reports could call using `source("../api.R")`.
+
+First we'll have to get to know a couple of R packages that makes this process relatively painless.
+
+```{r}
+library(jsonlite)
+library(httr)
+```
+
+## Get to know your data source
+
+The REST API you are trying to access would (hopefully) have some documentation available that guides you on how you can access the data you want. In my case I'm accessing some test data that's being ran in a off-shore server lab.
+
+Typically a REST API database would have a base URL and then numerous sub directories to serve different call purposes.
+
+As an example I'll use GitHub's API. Documentation here: https://docs.github.com/en/rest
+
+```{r}
+# Define the base URL
+base <- "https://api.github.com"
+```
+
+
+```{r}
+url <- paste(base, "/repos/chikity/r-notebook", sep = "")
+```
+
+```{r}
+res <- GET(url = url, config = list())
+```
+
+
+
+```{r}
+status_code <- httr::status_code(res)
+ print(paste("Status code:", status_code))
+```
+
+
+
+
+## GET
+```
+GET(url = NULL, config = list(), ..., handle = NULL)
+```
+
+
+
+```{r}
+GET(url = url, config = list())
+```
+
+
+
+## POST
+```
+POST(
+  url = NULL,
+  config = list(),
+  ...,
+  body = NULL,
+  encode = c("multipart", "form", "json", "raw"),
+  handle = NULL
+)
+```
+
+A request body is needed for POST call methods.  The specifics of the contents, structure, and data type depends on your use case and can be referred from the API's documentation.  But more often than not the contents have to be fed as a json object.  This is where jsonlite package comes in handy.
+
+### Building the Body
+
+```{r}
+# First make a nested list (depends on your POST's specifics)
+
+body <- list()
+subBody <- list()
+subBody2 <- list()
+page <- 1
+
+subBody$contentX <- "a"
+subBody$contentY <- "b"
+
+subBody2$foo <- "bar"
+
+body$subBody <- subBody
+body$subBody2 <- subBody2
+body$page <- page
+
+b <- jsonlite::toJSON(body, pretty = TRUE, auto_unbox = TRUE)
+
+print("Here's what it looks like as a JSON")
+b
+```
+
+
+
+### Handling Multi-page Results
+1. Deconstruct
+2. Get total number of available pages
+3. Loop call from each idividual page and aggregate results
+
+In my particular use case, the POST API I was calling returns only 100 results per page and to get all the results I had to iterate through all the available pages and combine the returned results.  If you've noticed the request body example above there is a item for page that specifies the result's page number that can be used to navigate through all the available results.
+
+```{r}
+totalPage <- result$totalPage
+
+while (df$page < totalPage) {
+  # Update the request body to go through the pages
+  page <- page+1
+}
+```
+
+
+
+## Getting results into a DataFrame
+### Basic
+
+```{r}
+result <- httr::content(res, "text")
+df <- fromJSON(result)
+```
+
+### Multi-page Result
+
+```{r}
+# Make a dataframe list
+dfs <- list(df)
+
+while (df$page < totalPage) {
+  result <- httr::content(res, "text")
+  df <- fromJSON(result)
+  dfs <- append(dfs, list(df))
+}
+
+data <- dfs %>% reduce(full_join)
+```
+
+
+## Chunking Requests
+
+Some APIs specify the number of items it can take in a single request.  This calls for the need to chunk items within the limit.
+
+```{r}
+# Get the total number of items you need to request
+nRequest <- length(requestList)
+chunkSize <- 100
+
+# Making a template data frame to store request results
+dfs <- setNames(data.frame(matrix(ncol = 3, nrow = 0)), c("a", "b", "c"))
+
+# Iterate through the requests
+for (i in 1:ceiling(nRequest / chunkSize)) {
+  # Get a list of items to request by chunk size
+  request <-requestList[((i-1)*chunkSize+1):min(nRequest,(i*chunkSize))]
+  
+  # Convert that list into a comma delimited string (Depends on your API)
+  input <- paste(as.character(requests), collapse = ",")
+  
+  # Make the API request
+  response <- httr::GET(url, query = list(variable = input))
+  
+  result <- httr::content(response, "text")
+  df <- fromJSON(result)
+  dfs <- rbind(dfs, df)
+}
+```
+
+
+## How to deal with nested lists in dataframe
+
+Use tidyr's `unnest()` function
+```{r}
+df_new <- df %>% 
+  unnest(listedColumn)
+```
+
+
+
+
+
+
 
